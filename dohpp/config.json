@@ -1,0 +1,12 @@
+{
+    "proxy": {
+        "addr": "127.0.0.1",
+        "port": 1080,
+        "auth": ""
+    },
+    "google_dns_url": "https://dns.google.com/resolve?{ext}",
+    "cache_timeout": 1800,
+    "async_https": false,
+    "listen": "127.0.0.1",
+    "port": 53
+}
