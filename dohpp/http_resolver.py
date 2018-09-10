@@ -1,8 +1,28 @@
 import time
+import asyncio
 from dnslib import QTYPE
 from util import BaseHTTPResolver
 from dnslib.server import (BaseResolver, RR)
 from dns_query import (SyncDNSQuery, AsyncDNSQuery)
+
+
+class AsyncHTTPResolver(BaseHTTPResolver, BaseResolver):
+    def __init__(self, cache=dict()):
+        super(AsyncHTTPResolver, self).__init__()
+        self.query_handler = AsyncDNSQuery()
+        self.cache = cache
+
+    def resolve(self, request, handler):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        hostname = str(request.q.qname)
+        query_type = request.q.qtype
+        _cache = self.cache.get(hostname)
+        url = self.google_dns_url.format(ext='name={name}&type={type}'.format(
+            name=hostname, type=query_type))
+        answer = loop.run_until_complete(
+            self.query_handler.fetch_dns_query(url=url)).get('Answer')
+        print(answer)
 
 
 class SyncHTTPResolver(BaseHTTPResolver, BaseResolver):

@@ -1,5 +1,6 @@
 import asyncio
 import requests
+from functools import partial
 from util import BaseDNSQuery
 
 
@@ -15,13 +16,14 @@ class SyncDNSQuery(BaseDNSQuery):
 
 
 class AsyncDNSQuery(BaseDNSQuery):
-    def __init__(self):
-        self.connector = ProxyConnector()
-
     async def fetch_dns_query(self, url):
-        async with aiohttp.ClientSession(
-                connector=self.connector,
-                request_class=ProxyClientRequest) as session:
-            async with session.get(
-                    url=url, headers=self.headers, proxy=self.proxy) as resp:
-                return await resp.text()
+        loop = asyncio.get_event_loop()
+        asyncio.set_event_loop(loop)
+        requests_with_proxies = partial(
+            requests.get, proxies=self.proxy, headers=self.headers)
+        r = await loop.run_in_executor(None, requests_with_proxies, url)
+        print(r)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            return {}
