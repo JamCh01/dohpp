@@ -1,9 +1,10 @@
 import time
 import signal
+import importlib
 from util import ConfigParse
+from cache import SimpleCache
 from http_resolver import HTTPResolver
 from dnslib.server import DNSServer, DNSLogger
-import importlib
 
 __dns_query__ = ['AsyncDNSQuery', 'SyncDNSQuery']
 
@@ -28,7 +29,8 @@ class LocalServer():
     @property
     def server(self):
         return DNSServer(
-            resolver=HTTPResolver(query=import_resolver(), cache=dict()),
+            resolver=HTTPResolver(
+                query=import_query(), cache=SimpleCache(timeout=1800)),
             address=ConfigParse.listen,
             port=ConfigParse.port,
             logger=DNSLogger())

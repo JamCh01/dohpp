@@ -7,7 +7,7 @@ from dns_query import (SyncDNSQuery, AsyncDNSQuery)
 
 
 class HTTPResolver(BaseHTTPResolver, BaseResolver):
-    def __init__(self, query, cache=dict()):
+    def __init__(self, query, cache):
         super(HTTPResolver, self).__init__()
         self.query_worker = query()
         self.handler = self.__async_query if 'async' in query.__name__.lower(
@@ -28,21 +28,16 @@ class HTTPResolver(BaseHTTPResolver, BaseResolver):
     def resolve(self, request, handler):
         hostname = str(request.q.qname)
         query_type = request.q.qtype
-        _cache = self.cache.get(hostname)
-
-        if _cache and _cache.get('dt') - int(time.time()) < self.cache_timeout:
-            answer = _cache.get(query_type)
+        _cache = self.cache.get_item(domain=hostname, query_type=query_type)
+        if _cache:
+            answer = _cache
         else:
             url = self.google_dns_url.format(
                 ext='name={name}&type={type}'.format(
                     name=hostname, type=query_type))
             answer = self.handler(url=url)
-            if hostname not in self.cache:
-                self.cache.setdefault(hostname, dict())
-            self.cache.get(hostname).update({
-                query_type: answer,
-                'dt': int(time.time()),
-            })
+            self.cache.set_item(
+                domain=hostname, query_type=query_type, data=answer)
 
         reply = request.reply()
         for record in answer:
