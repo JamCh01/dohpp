@@ -1,13 +1,16 @@
 import time
 import signal
 from util import ConfigParse
+from http_resolver import HTTPResolver
 from dnslib.server import DNSServer, DNSLogger
 import importlib
 
+__dns_query__ = ['AsyncDNSQuery', 'SyncDNSQuery']
 
-def import_resolver(async_type):
-    module_name = 'http_resolver'
-    class_name = 'AsyncHTTPResolver' if async_type else 'SyncHTTPResolver'
+
+def import_query():
+    module_name = 'dns_query'
+    class_name = 'AsyncDNSQuery' if ConfigParse.async_https else 'SyncDNSQuery'
     return getattr(importlib.import_module(module_name), class_name)
 
 
@@ -21,17 +24,14 @@ def import_cache(cache_type=None):
 class LocalServer():
     def __init__(self):
         self.running = True
-        async_type = ConfigParse.async_https
-        self.resolver = import_resolver(async_type=async_type)
-        self.logger = DNSLogger()
 
     @property
     def server(self):
         return DNSServer(
-            resolver=self.resolver(cache=dict()),
+            resolver=HTTPResolver(query=import_resolver(), cache=dict()),
             address=ConfigParse.listen,
             port=ConfigParse.port,
-            logger=self.logger)
+            logger=DNSLogger())
 
     def start(self):
         self.server.start_thread()
