@@ -1,4 +1,2 @@
-aiohttp>=3.4.2
-aiosocksy>=0.1.2
 requests>=2.19.1
 dnslib>=0.9.7
