@@ -22,7 +22,6 @@ class AsyncDNSQuery(BaseDNSQuery):
         requests_with_proxies = partial(
             requests.get, proxies=self.proxy, headers=self.headers)
         r = await loop.run_in_executor(None, requests_with_proxies, url)
-        print(r)
         if r.status_code == 200:
             return r.json()
         else:

@@ -20,9 +20,27 @@ class AsyncHTTPResolver(BaseHTTPResolver, BaseResolver):
         _cache = self.cache.get(hostname)
         url = self.google_dns_url.format(ext='name={name}&type={type}'.format(
             name=hostname, type=query_type))
-        answer = loop.run_until_complete(
-            self.query_handler.fetch_dns_query(url=url)).get('Answer')
-        print(answer)
+        if _cache and _cache.get('dt') - int(time.time()) < self.cache_timeout:
+            answer = _cache.get(query_type)
+        else:
+            answer = loop.run_until_complete(
+                self.query_handler.fetch_dns_query(url=url)).get('Answer')
+            if hostname not in self.cache:
+                self.cache.setdefault(hostname, dict())
+            self.cache.get(hostname).update({
+                query_type: answer,
+                'dt': int(time.time()),
+            })
+        reply = request.reply()
+        for record in answer:
+            rtype = QTYPE[int(record['type'])]
+            zone = '{name} {TTL} {rtype} {data}'.format(
+                name=str(record['name']),
+                TTL=record['TTL'],
+                rtype=rtype,
+                data=str(record['data']))
+            reply.add_answer(*RR.fromZone(zone))
+        return reply
 
 
 class SyncHTTPResolver(BaseHTTPResolver, BaseResolver):
