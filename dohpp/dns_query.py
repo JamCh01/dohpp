@@ -1,22 +1,9 @@
-import aiohttp
 import asyncio
 import requests
 from util import BaseDNSQuery
-from aiosocksy.connector import ProxyConnector, ProxyClientRequest
 
 
 class SyncDNSQuery(BaseDNSQuery):
-    def __init__(self):
-        super(SyncDNSQuery, self).__init__()
-        socks5h_str = 'socks5h://{auth}{host}:{port}'.format(
-            auth='' if not self.proxy_auth else self.proxy_auth + '@',
-            host=self.proxy_addr,
-            port=self.proxy_port)
-        self.proxy = {
-            'http': socks5h_str,
-            'https': socks5h_str,
-        }
-
     def fetch_dns_query(self, url):
         if url.endswith('in-addr.arpa'):
             return {}

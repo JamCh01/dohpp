@@ -25,8 +25,9 @@ class SyncHTTPResolver(BaseHTTPResolver, BaseResolver):
                 self.cache.setdefault(hostname, dict())
             self.cache.get(hostname).update({
                 query_type: answer,
-                'dt': int(time.time())
+                'dt': int(time.time()),
             })
+
         reply = request.reply()
         for record in answer:
             rtype = QTYPE[int(record['type'])]
