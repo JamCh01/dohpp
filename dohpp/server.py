@@ -7,7 +7,7 @@ import importlib
 
 def import_resolver(async_type):
     module_name = 'http_resolver'
-    class_name = 'ASyncHTTPResolver' if async_type else 'SyncHTTPResolver'
+    class_name = 'AsyncHTTPResolver' if async_type else 'SyncHTTPResolver'
     return getattr(importlib.import_module(module_name), class_name)
 
 

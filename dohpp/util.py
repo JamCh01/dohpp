@@ -25,6 +25,14 @@ class BaseDNSQuery():
         self.proxy_addr = ConfigParse.proxy_addr
         self.proxy_port = ConfigParse.proxy_port
         self.proxy_auth = ConfigParse.proxy_auth
+        socks5h_str = 'socks5h://{auth}{host}:{port}'.format(
+            auth='' if not self.proxy_auth else self.proxy_auth + '@',
+            host=self.proxy_addr,
+            port=self.proxy_port)
+        self.proxy = {
+            'http': socks5h_str,
+            'https': socks5h_str,
+        }
 
 
 class BaseHTTPResolver():
