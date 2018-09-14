@@ -1,32 +1,44 @@
 import time
+import asyncio
 from dnslib import QTYPE
 from util import BaseHTTPResolver
 from dnslib.server import (BaseResolver, RR)
 from dns_query import (SyncDNSQuery, AsyncDNSQuery)
 
 
-class SyncHTTPResolver(BaseHTTPResolver, BaseResolver):
-    def __init__(self, cache=dict()):
-        super(SyncHTTPResolver, self).__init__()
-        self.query_handler = SyncDNSQuery()
+class HTTPResolver(BaseHTTPResolver, BaseResolver):
+    def __init__(self, query, cache):
+        super(HTTPResolver, self).__init__()
+        self.query_worker = query()
+        self.handler = self.__async_query if 'async' in query.__name__.lower(
+        ) else self.__sync_query
         self.cache = cache
+
+    def __async_query(self, url):
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        answer = loop.run_until_complete(
+            self.query_worker.fetch_dns_query(url=url)).get('Answer')
+        return answer
+
+    def __sync_query(self, url):
+        answer = self.query_worker.fetch_dns_query(url=url).get('Answer')
+        return answer
 
     def resolve(self, request, handler):
         hostname = str(request.q.qname)
         query_type = request.q.qtype
-        _cache = self.cache.get(hostname)
-        url = self.google_dns_url.format(ext='name={name}&type={type}'.format(
-            name=hostname, type=query_type))
-        if _cache and _cache.get('dt') - int(time.time()) < self.cache_timeout:
-            answer = _cache.get(query_type)
+        _cache = self.cache.get_item(domain=hostname, query_type=query_type)
+        if _cache:
+            answer = _cache
         else:
-            answer = self.query_handler.fetch_dns_query(url=url).get('Answer')
-            if hostname not in self.cache:
-                self.cache.setdefault(hostname, dict())
-            self.cache.get(hostname).update({
-                query_type: answer,
-                'dt': int(time.time())
-            })
+            url = self.google_dns_url.format(
+                ext='name={name}&type={type}'.format(
+                    name=hostname, type=query_type))
+            answer = self.handler(url=url)
+            self.cache.set_item(
+                domain=hostname, query_type=query_type, data=answer)
+
         reply = request.reply()
         for record in answer:
             rtype = QTYPE[int(record['type'])]
