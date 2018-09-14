@@ -11,7 +11,7 @@ class SimpleCache(BaseCache):
     def get_item(self, domain, query_type):
         _cache = self.cache.get(domain)
         if _cache and _cache.get('dt') - int(time.time()) < self.cache_timeout:
-            answer = _cache.get(query_type)
+            answer = _cache.get(query_type, dict())
         else:
             answer = dict()
         return answer
