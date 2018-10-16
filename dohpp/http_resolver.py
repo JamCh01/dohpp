@@ -33,8 +33,8 @@ class HTTPResolver(BaseHTTPResolver, BaseResolver):
             answer = _cache
         else:
             url = self.google_dns_url.format(
-                ext='name={name}&type={type}'.format(
-                    name=hostname, type=query_type))
+                ext=self.ext.format(
+                    name=hostname, type=query_type, edns=self.edns))
             answer = self.handler(url=url)
             self.cache.set_item(
                 domain=hostname, query_type=query_type, data=answer)
