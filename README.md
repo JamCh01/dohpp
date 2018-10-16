@@ -2,7 +2,9 @@
 dns over https by pure python
 
 ## dohpp是什么
-dohpp的全名是`DNS over HTTPS by Pure Python`，它是由Python构建的，依赖于GoogleDNS的DOH服务。目的是为了避免DNS抢答或DNS污染。
+dohpp的全名是`DNS over HTTPS by Pure Python`，它是由Python构建的，依赖于GoogleDNS的DOH服务。目的是为了避免DNS抢答，DNS污染和DNS劫持。
+
+可以使用dohpp作为DNS服务器来维护网络的干净和安全~
 
 ## 如何使用？
 ### 1. 下载源码
@@ -34,17 +36,17 @@ dohpp提供了默认的`config.json`，它位于`dohpp/dohpp/config.json`。请�
 }
 ```
 #### proxy
-proxy字段制定了socks5的代理，因为某些特殊的原因使用GoogleDNS需要代理。
+proxy字段指定了socks5的代理，因为某些特殊的原因使用GoogleDNS需要代理。
 #### cache_timeout
 查询后的域名解析记录缓存时间，默认1800s。
 #### async_https
 使用异步HTTPS请求来代替同步HTTPS请求，默认false。
 #### listen
-dohpp工作的IP
+dohpp工作的IP，默认为127.0.0.1。
 #### port
-dohpp工作的端口
+dohpp工作的端口，默认为53。
 #### local
-edns使用，目的是获得最合理的解析记录，默认为空。
+edns使用，目的是获得最合理的解析记录，默认为空。请注意，为空时可能会使用socks5服务器的最优查询结果进行返回。
 
 当然这些配置可以不设置，或者丢失部分记录，dohpp会使用默认的配置进行工作。
 
