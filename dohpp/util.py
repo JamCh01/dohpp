@@ -1,4 +1,5 @@
 import json
+import time
 
 
 class ConfigParse():
@@ -17,6 +18,7 @@ class ConfigParse():
     listen = config.get('listen', '127.0.0.1')
     port = config.get('port', 53)
     async_https = config.get('async_https', False)
+    edns = config.get('local', '0.0.0.0/0')
 
 
 class BaseDNSQuery():
@@ -25,6 +27,14 @@ class BaseDNSQuery():
         self.proxy_addr = ConfigParse.proxy_addr
         self.proxy_port = ConfigParse.proxy_port
         self.proxy_auth = ConfigParse.proxy_auth
+        socks5h_str = 'socks5h://{auth}{host}:{port}'.format(
+            auth='' if not self.proxy_auth else self.proxy_auth + '@',
+            host=self.proxy_addr,
+            port=self.proxy_port)
+        self.proxy = {
+            'http': socks5h_str,
+            'https': socks5h_str,
+        }
 
 
 class BaseHTTPResolver():
@@ -32,8 +42,29 @@ class BaseHTTPResolver():
         self.google_dns_url = ConfigParse.google_dns_url
         self.cache_timeout = ConfigParse.cache_timeout
         self.proxy = ConfigParse.proxy
+        self.edns = ConfigParse.edns
+        self.ext = 'name={name}&type={type}&edns_client_subnet={edns}'
 
 
 class BaseCache():
-    def __init__(self):
-        pass
+    def __init__(self, timeout=1800):
+        # example by dict
+        self.cache = dict()
+        self.cache_timeout = timeout or ConfigParse.cache_timeout
+
+    def get_item(self, domain, query_type):
+        _cache = self.cache.get(domain)
+        if _cache and _cache.get('dt') - int(time.time()) < self.cache_timeout:
+            answer = _cache.get(query_type)
+        else:
+            answer = dict()
+        return answer
+
+    def set_item(self, domain, query_type, data):
+        if domain not in self.cache:
+            self.cache.setdefault(domain, dict())
+        self.cache.get(domain).update({
+            query_type: data,
+            'dt': int(time.time()),
+        })
+        return

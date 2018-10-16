@@ -8,5 +8,6 @@
     "cache_timeout": 1800,
     "async_https": false,
     "listen": "127.0.0.1",
-    "port": 53
+    "port": 53,
+    "local": ""
 }
