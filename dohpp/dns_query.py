@@ -1,22 +1,10 @@
-import aiohttp
 import asyncio
 import requests
+from functools import partial
 from util import BaseDNSQuery
-from aiosocksy.connector import ProxyConnector, ProxyClientRequest
 
 
 class SyncDNSQuery(BaseDNSQuery):
-    def __init__(self):
-        super(SyncDNSQuery, self).__init__()
-        socks5h_str = 'socks5h://{auth}{host}:{port}'.format(
-            auth='' if not self.proxy_auth else self.proxy_auth + '@',
-            host=self.proxy_addr,
-            port=self.proxy_port)
-        self.proxy = {
-            'http': socks5h_str,
-            'https': socks5h_str,
-        }
-
     def fetch_dns_query(self, url):
         if url.endswith('in-addr.arpa'):
             return {}
@@ -28,13 +16,13 @@ class SyncDNSQuery(BaseDNSQuery):
 
 
 class AsyncDNSQuery(BaseDNSQuery):
-    def __init__(self):
-        self.connector = ProxyConnector()
-
     async def fetch_dns_query(self, url):
-        async with aiohttp.ClientSession(
-                connector=self.connector,
-                request_class=ProxyClientRequest) as session:
-            async with session.get(
-                    url=url, headers=self.headers, proxy=self.proxy) as resp:
-                return await resp.text()
+        loop = asyncio.get_event_loop()
+        asyncio.set_event_loop(loop)
+        requests_with_proxies = partial(
+            requests.get, proxies=self.proxy, headers=self.headers)
+        r = await loop.run_in_executor(None, requests_with_proxies, url)
+        if r.status_code == 200:
+            return r.json()
+        else:
+            return {}
