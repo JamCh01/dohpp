@@ -18,6 +18,7 @@ class ConfigParse():
     listen = config.get('listen', '127.0.0.1')
     port = config.get('port', 53)
     async_https = config.get('async_https', False)
+    edns = config.get('local', '0.0.0.0/0')
 
 
 class BaseDNSQuery():
@@ -41,6 +42,8 @@ class BaseHTTPResolver():
         self.google_dns_url = ConfigParse.google_dns_url
         self.cache_timeout = ConfigParse.cache_timeout
         self.proxy = ConfigParse.proxy
+        self.edns = ConfigParse.edns
+        self.ext = 'name={name}&type={type}&edns_client_subnet={edns}'
 
 
 class BaseCache():
