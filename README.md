@@ -52,7 +52,7 @@ edns使用，目的是获得最合理的解析记录，默认为空。请注意�
 
 #### 4. 使用
 ```
-python /path/to/dohp/pserver.py
+python /path/to/dohpp/server.py
 ```
 之后更改本机DNS服务器为`127.0.0.1`或配置中listen的数值。
 It works well!
