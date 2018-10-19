@@ -15,10 +15,10 @@ class ConfigParse():
     proxy_addr = proxy.get('addr')
     proxy_port = proxy.get('port')
     proxy_auth = proxy.get('auth')
-    listen = config.get('listen', '127.0.0.1')
-    port = config.get('port', 53)
+    listen = config.get('listen', '127.0.0.1') or '127.0.0.1'
+    port = config.get('port', 53) or 53
     async_https = config.get('async_https', False)
-    edns = config.get('local', '0.0.0.0/0')
+    edns = config.get('local', '0.0.0.0/0') or '0.0.0.0/0'
 
 
 class BaseDNSQuery():
