@@ -26,20 +26,17 @@ class LocalServer():
     def __init__(self):
         self.running = True
 
-    @property
-    def server(self):
-        return DNSServer(
+    def start(self):
+        server = DNSServer(
             resolver=HTTPResolver(
                 query=import_query(), cache=SimpleCache(timeout=1800)),
             address=ConfigParse.listen,
             port=ConfigParse.port,
             logger=DNSLogger())
-
-    def start(self):
-        self.server.start_thread()
+        server.start_thread()
         while self.running:
             time.sleep(5)
-        self.server.stop()
+        server.stop()
 
     def stop(self, signal, handler):
         self.running = False
@@ -48,6 +45,7 @@ class LocalServer():
 def main():
     localserver = LocalServer()
     signal.signal(signal.SIGINT, localserver.stop)
+    signal.signal(signal.SIGTERM, localserver.stop)
     localserver.start()
 
 
