@@ -15,21 +15,13 @@ def import_query():
     return getattr(importlib.import_module(module_name), class_name)
 
 
-def import_cache(cache_type=None):
-    # fake
-    moudle_name = 'cache'
-    class_name = 'simple_cache'
-    return getattr(importlib.import_module(moudle_name), class_name)
-
-
 class LocalServer():
     def __init__(self):
         self.running = True
 
     def start(self):
         server = DNSServer(
-            resolver=HTTPResolver(
-                query=import_query(), cache=SimpleCache(timeout=1800)),
+            resolver=HTTPResolver(query=import_query(), cache=SimpleCache()),
             address=ConfigParse.listen,
             port=ConfigParse.port,
             logger=DNSLogger())
