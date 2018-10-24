@@ -4,42 +4,37 @@ import time
 
 class ConfigParse():
     config = json.load(open('config.json', 'r'))
-    google_dns_url = config.get('google_dns_url',
-                                'https://dns.google.com/resolve?{ext}')
-    cache_timeout = config.get('cache_timeout', 1800)
-    proxy = config.get('proxy', {
-        'addr': '127.0.0.1',
-        'port': 1080,
-        'auth': '',
-    })
-    proxy_addr = proxy.get('addr')
-    proxy_port = proxy.get('port')
-    proxy_auth = proxy.get('auth')
-    listen = config.get('listen', '127.0.0.1') or '127.0.0.1'
-    port = config.get('port', 53) or 53
-    async_https = config.get('async_https', False)
-    edns = config.get('local', '0.0.0.0/0') or '0.0.0.0/0'
+    dohpp_settings = config.get('dohpp_settings')
+    google_dns_settings = config.get('google_dns_settings')
+    proxy_addr = dohpp_settings.get('proxy_addr', '127.0.0.1') or '127.0.0.1'
+    proxy_port = dohpp_settings.get('proxy_port', 1080) or 1080
+    proxy_auth = dohpp_settings.get('proxy_auth', None)
+
+    proxy = 'socks5h://{auth}{host}:{port}'.format(
+        auth='' if not proxy_auth else proxy_auth + '@',
+        host=proxy_addr,
+        port=proxy_port)
+
+    cache_timeout = dohpp_settings.get('cache_timeout', 1800)
+    listen = dohpp_settings.get('listen', '127.0.0.1') or '127.0.0.1'
+    port = dohpp_settings.get('port', 53) or 53
+    async_https = dohpp_settings.get('async_https', False)
+    edns = google_dns_settings.get('local', '0.0.0.0/0') or '0.0.0.0/0'
 
 
 class BaseDNSQuery():
     def __init__(self):
+        self.url = 'https://dns.google.com/resolve'
         self.headers = {'Content-Type': 'application/json'}
-        self.proxy_addr = ConfigParse.proxy_addr
-        self.proxy_port = ConfigParse.proxy_port
-        self.proxy_auth = ConfigParse.proxy_auth
-        socks5h_str = 'socks5h://{auth}{host}:{port}'.format(
-            auth='' if not self.proxy_auth else self.proxy_auth + '@',
-            host=self.proxy_addr,
-            port=self.proxy_port)
+        socks5h = ConfigParse.proxy
         self.proxy = {
-            'http': socks5h_str,
-            'https': socks5h_str,
+            'http': socks5h,
+            'https': socks5h,
         }
 
 
 class BaseHTTPResolver():
     def __init__(self):
-        self.google_dns_url = ConfigParse.google_dns_url
         self.cache_timeout = ConfigParse.cache_timeout
         self.proxy = ConfigParse.proxy
         self.edns = ConfigParse.edns
@@ -47,10 +42,11 @@ class BaseHTTPResolver():
 
 
 class BaseCache():
-    def __init__(self, timeout=1800):
+    def __init__(self):
         # example by dict
         self.cache = dict()
-        self.cache_timeout = timeout or ConfigParse.cache_timeout
+        self.cache_timeout = ConfigParse.dohpp_settings.get(
+            'cache_timeout', 1800) or 1800
 
     def get_item(self, domain, query_type):
         _cache = self.cache.get(domain)

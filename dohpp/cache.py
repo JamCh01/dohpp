@@ -3,10 +3,8 @@ from util import BaseCache
 
 
 class SimpleCache(BaseCache):
-    def __init__(self, timeout):
+    def __init__(self):
         super(SimpleCache, self).__init__()
-        self.cache = dict()
-        self.cache_timeout = timeout
 
     def get_item(self, domain, query_type):
         _cache = self.cache.get(domain)
