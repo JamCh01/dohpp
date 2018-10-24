@@ -15,31 +15,20 @@ def import_query():
     return getattr(importlib.import_module(module_name), class_name)
 
 
-def import_cache(cache_type=None):
-    # fake
-    moudle_name = 'cache'
-    class_name = 'simple_cache'
-    return getattr(importlib.import_module(moudle_name), class_name)
-
-
 class LocalServer():
     def __init__(self):
         self.running = True
 
-    @property
-    def server(self):
-        return DNSServer(
-            resolver=HTTPResolver(
-                query=import_query(), cache=SimpleCache(timeout=1800)),
+    def start(self):
+        server = DNSServer(
+            resolver=HTTPResolver(query=import_query(), cache=SimpleCache()),
             address=ConfigParse.listen,
             port=ConfigParse.port,
             logger=DNSLogger())
-
-    def start(self):
-        self.server.start_thread()
+        server.start_thread()
         while self.running:
             time.sleep(5)
-        self.server.stop()
+        server.stop()
 
     def stop(self, signal, handler):
         self.running = False
@@ -48,6 +37,7 @@ class LocalServer():
 def main():
     localserver = LocalServer()
     signal.signal(signal.SIGINT, localserver.stop)
+    signal.signal(signal.SIGTERM, localserver.stop)
     localserver.start()
 
 

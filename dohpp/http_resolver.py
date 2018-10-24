@@ -14,15 +14,15 @@ class HTTPResolver(BaseHTTPResolver, BaseResolver):
         ) else self.__sync_query
         self.cache = cache
 
-    def __async_query(self, url):
+    def __async_query(self, params):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         answer = loop.run_until_complete(
-            self.query_worker.fetch_dns_query(url=url)).get('Answer')
+            self.query_worker.fetch_dns_query(params=params)).get('Answer')
         return answer
 
-    def __sync_query(self, url):
-        answer = self.query_worker.fetch_dns_query(url=url).get('Answer')
+    def __sync_query(self, params):
+        answer = self.query_worker.fetch_dns_query(params=params).get('Answer')
         return answer
 
     def resolve(self, request, handler):
@@ -32,10 +32,8 @@ class HTTPResolver(BaseHTTPResolver, BaseResolver):
         if _cache:
             answer = _cache
         else:
-            url = self.google_dns_url.format(
-                ext=self.ext.format(
-                    name=hostname, type=query_type, edns=self.edns))
-            answer = self.handler(url=url)
+            params = dict(name=hostname, type=query_type, edns=self.edns)
+            answer = self.handler(params=params)
             self.cache.set_item(
                 domain=hostname, query_type=query_type, data=answer)
 

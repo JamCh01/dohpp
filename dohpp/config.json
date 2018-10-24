@@ -1,13 +1,14 @@
 {
-    "proxy": {
-        "addr": "127.0.0.1",
-        "port": 1080,
-        "auth": ""
+    "dohpp_settings": {
+        "cache_timeout": 1800,
+        "async_https": false,
+        "dohpp_listen": "127.0.0.1",
+        "dohpp_port": 53,
+        "proxy_addr": "127.0.0.1",
+        "proxy_port": 1080,
+        "porxy_auth": ""
     },
-    "google_dns_url": "https://dns.google.com/resolve?{ext}",
-    "cache_timeout": 1800,
-    "async_https": false,
-    "listen": "127.0.0.1",
-    "port": 53,
-    "local": ""
+    "google_dns_settings": {
+        "edns": ""
+    }
 }
